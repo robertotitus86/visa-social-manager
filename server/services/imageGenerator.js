@@ -1,4 +1,7 @@
-// Generación de imágenes gratis con Pollinations.ai — Flux, sin API key, sin costo
+// Generación de imágenes: primero usa imágenes subidas por Roberto (Freepik),
+// si no hay ninguna disponible usa Pollinations.ai como respaldo automático.
+
+export const imagenesSubidas = new Map(); // slot → base64 jpeg
 
 const VISUAL_PROMPTS = {
   promocion_usa: [
@@ -80,12 +83,18 @@ function buildUrl(prompt, width, height) {
   return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&seed=${seed}&model=flux&nologo=true&enhance=true`;
 }
 
+const SERVER_URL = process.env.SERVER_URL || 'https://visa-social-manager.onrender.com';
+
 export async function generatePostImages(postContent) {
   const { contentType } = postContent;
-  const prompt = pickPrompt(contentType);
 
-  const feedUrl  = buildUrl(prompt, 1080, 1080);
-  const storyUrl = buildUrl(prompt, 1080, 1920);
+  const feedUrl  = imagenesSubidas.has('feed')
+    ? `${SERVER_URL}/api/imagen/feed`
+    : buildUrl(pickPrompt(contentType), 1080, 1080);
+
+  const storyUrl = imagenesSubidas.has('story')
+    ? `${SERVER_URL}/api/imagen/story`
+    : buildUrl(pickPrompt(contentType), 1080, 1920);
 
   return {
     instagram_feed:  feedUrl,

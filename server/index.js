@@ -6,7 +6,7 @@ import { generatePostContent } from './services/contentGenerator.js';
 import { renderPostDesigns } from './services/renderDesigns.js';
 import { publishToSocialMedia } from './services/socialMediaPublisher.js';
 import { getScheduledPosts, addPost, updatePost, deletePost } from './services/database.js';
-import { generatePostImages } from './services/imageGenerator.js';
+import { generatePostImages, imagenesSubidas } from './services/imageGenerator.js';
 import { generateAdvancedCopy } from './services/advancedCopywriter.js';
 import { generateVideo } from './services/videoGenerator.js';
 
@@ -160,6 +160,43 @@ cron.schedule('0 20 * * *', async () => {
       console.log('[CRON 8pm] Video TikTok generado');
     }
   } catch (err) { console.error('[CRON 8pm] Error:', err.message); }
+});
+
+// Subir imagen desde local (Roberto la genera en Freepik y la sube con subir.js)
+app.post('/api/subir-imagen', (req, res) => {
+  const { token, slot, imagen } = req.body;
+  if (token !== 'visaglobal2026') {
+    return res.status(401).json({ error: 'Token incorrecto' });
+  }
+  if (!['feed', 'story'].includes(slot)) {
+    return res.status(400).json({ error: 'slot debe ser "feed" o "story"' });
+  }
+  if (!imagen) {
+    return res.status(400).json({ error: 'Falta el campo imagen (base64)' });
+  }
+  imagenesSubidas.set(slot, imagen);
+  console.log(`[IMAGEN] Recibida imagen para slot: ${slot}`);
+  res.json({ ok: true, slot, mensaje: `Imagen ${slot} guardada. Se usará en el próximo post.` });
+});
+
+// Servir imagen subida (para que Meta/Instagram pueda acceder a la URL pública)
+app.get('/api/imagen/:slot', (req, res) => {
+  const { slot } = req.params;
+  const base64 = imagenesSubidas.get(slot);
+  if (!base64) {
+    return res.status(404).json({ error: 'No hay imagen subida para este slot' });
+  }
+  const buffer = Buffer.from(base64, 'base64');
+  res.set('Content-Type', 'image/jpeg');
+  res.send(buffer);
+});
+
+// Ver qué imágenes están cargadas
+app.get('/api/imagenes-status', (req, res) => {
+  res.json({
+    feed:  imagenesSubidas.has('feed')  ? 'cargada ✓' : 'vacío (usará Pollinations)',
+    story: imagenesSubidas.has('story') ? 'cargada ✓' : 'vacío (usará Pollinations)'
+  });
 });
 
 // TEST: genera imagen + copy
