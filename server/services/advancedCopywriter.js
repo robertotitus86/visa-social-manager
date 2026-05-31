@@ -46,16 +46,38 @@ const COPY_INSTRUCTIONS = {
   caso_exitoso: 'Post celebrando un caso de éxito en términos generales — sin nombres inventados. Enfocado en la transformación: de la incertidumbre al viaje hecho realidad.'
 };
 
-export async function generateAdvancedCopy(contentType, dayOfMonth = new Date().getDate()) {
+export async function generateAdvancedCopy(contentType) {
   const instruction = COPY_INSTRUCTIONS[contentType] || COPY_INSTRUCTIONS['tip_visa'];
-
-  const prompt = `${BRAND_CONTEXT}\n\n${instruction}\n\nGenera el post ahora. Solo el texto del post, sin explicaciones ni títulos. Día del mes para variar el contenido internamente: ${dayOfMonth}.`;
+  const now = new Date();
+  const fecha = now.toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' });
+  const angulos = [
+    'dolor del cliente que ya lo intentó solo y falló',
+    'sueño concreto: pisar ese aeropuerto y pasar migración',
+    'dato sorprendente que nadie sabe sobre los cónsules',
+    'miedo real al rechazo y cómo evitarlo',
+    'empatía: entender el nerviosismo del cliente',
+    'urgencia real: el tiempo del consulado no espera',
+    'autoridad: lo que sabe un asesor español que otros no',
+    'prueba social: familias que llegaron con rechazo y viajaron'
+  ];
+  const angulo = angulos[(now.getDate() + now.getMonth() * 3) % angulos.length];
+  const ganchos = [
+    'Empieza con una pregunta directa al lector.',
+    'Empieza con un dato o hecho que sorprenda.',
+    'Empieza con una afirmación contundente.',
+    'Empieza contando una situación que el lector reconoce.',
+    'Empieza con lo que el lector está pensando ahora mismo.',
+    'Empieza con el error más común que comete la gente.',
+    'Empieza con una frase corta de impacto, máximo 6 palabras.'
+  ];
+  const gancho = ganchos[(now.getDate() * 2 + now.getHours()) % ganchos.length];
 
   try {
-    const fullPrompt = `${BRAND_CONTEXT}\n\n---\n\n${instruction}\n\nDía del mes: ${dayOfMonth}. Responde SOLO con el texto del post, sin títulos ni explicaciones adicionales.`;
+    const fullPrompt = `${BRAND_CONTEXT}\n\n---\n\nFecha: ${fecha}.\nTipo de contenido: ${instruction}\nÁngulo emocional de hoy: "${angulo}".\nInstrucción de apertura: ${gancho}\n\nEl post debe ser ÚNICO para esta fecha. No repitas ganchos anteriores. SOLO el texto del post, sin títulos ni explicaciones.`;
+
     const response = await axios.post(GEMINI_URL, {
       contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-      generationConfig: { maxOutputTokens: 300, temperature: 0.75 }
+      generationConfig: { maxOutputTokens: 300, temperature: 0.95 }
     }, { timeout: 20000 });
 
     const copy = response.data.candidates[0].content.parts[0].text.trim();

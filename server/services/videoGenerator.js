@@ -43,7 +43,9 @@ const VIDEO_PROMPTS = {
 
 function pickPrompt(contentType) {
   const options = VIDEO_PROMPTS[contentType] || VIDEO_PROMPTS['cta_consulta'];
-  return options[Math.floor(Math.random() * options.length)];
+  const now = new Date();
+  const idx = (now.getDate() * 5 + now.getHours()) % options.length;
+  return options[idx];
 }
 
 async function submitVeoJob(prompt, aspectRatio = '9:16') {
