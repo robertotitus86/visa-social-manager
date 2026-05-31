@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: visa-social-manager
+    runtime: node
+    buildCommand: npm install
+    startCommand: node --use-system-ca server/index.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FREEPIK_API_KEY
+        sync: false
+      - key: FAL_API_KEY
+        sync: false
+      - key: FACEBOOK_ACCESS_TOKEN
+        sync: false
+      - key: FACEBOOK_PAGE_ID
+        sync: false
+      - key: INSTAGRAM_ACCESS_TOKEN
+        sync: false
+      - key: INSTAGRAM_BUSINESS_ACCOUNT_ID
+        sync: false
+      - key: TIKTOK_ACCESS_TOKEN
+        sync: false
+      - key: SERVER_URL
+        sync: false
+      - key: WEBSITE_URL
+        value: https://www.asesoriadevisadosglobal.com
